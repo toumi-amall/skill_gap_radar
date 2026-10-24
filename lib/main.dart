@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 import 'pages/auth/sign_up_page.dart';
+import 'pages/welcome/welcome_page.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +35,7 @@ class SkillGapRadarApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: mode,
-          home: const SignUpPage(),
+          home: const WelcomePage(),
         );
       },
     );

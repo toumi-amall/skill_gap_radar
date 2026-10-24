@@ -1,9 +1,11 @@
-// lib/fauth/sign_up_page.dart
+// lib/pages/auth/sign_up_page.dart
 import 'package:flutter/material.dart';
 
-import '../../../theme/app_theme.dart';
-import '../../../theme/theme_controller.dart';
-import '../../../widgets/radar_logo.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/theme_controller.dart';
+import '../../widgets/radar_logo.dart';
+import '../home/home_shell.dart';
+import 'login_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -69,8 +71,19 @@ class _SignUpPageState extends State<SignUpPage> {
 
     if (!mounted) return;
     setState(() => _loading = false);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Account created (demo)')));
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const HomeShell()),
+      (route) => false,
+    );
+  }
+
+  void _continueAsGuest() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const HomeShell(isGuest: true)),
+      (route) => false,
+    );
   }
 
   @override
@@ -82,7 +95,6 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          // Test button: switch light / dark
           IconButton(
             tooltip: 'Toggle theme',
             icon: Icon(
@@ -244,9 +256,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
                 // Guest (BF03)
                 OutlinedButton(
-                  onPressed: () {
-                    // TODO: navigate to home in guest mode (local data)
-                  },
+                  onPressed: _continueAsGuest,
                   child: const Text('Continue as guest'),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -259,7 +269,12 @@ class _SignUpPageState extends State<SignUpPage> {
                       Text('Already have an account?', style: text.bodyMedium),
                       TextButton(
                         onPressed: () {
-                          // TODO: navigate to LoginPage
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginPage(),
+                            ),
+                          );
                         },
                         child: const Text('Log in'),
                       ),
