@@ -1,9 +1,12 @@
-// lib/pages/home/home_shell.dart
 import 'package:flutter/material.dart';
 
+import '../../data/skills_store.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/theme_controller.dart';
+import '../analyze/analyze_page.dart';
+import '../skills/my_skills_page.dart';
 import '../welcome/welcome_page.dart';
+import 'dashboard_page.dart';
 
 class HomeShell extends StatefulWidget {
   final bool isGuest;
@@ -19,12 +22,9 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const _HomeTab(),
-      const _PlaceholderTab(
-        icon: Icons.radar,
-        title: 'Analyze a job offer',
-        subtitle: 'Paste an offer here and compare it with your skills.',
-      ),
+      _HomeTab(onAnalyze: () => setState(() => _index = 2)),
+      const DashboardPage(),
+      const AnalyzePage(),
       _ProfileTab(isGuest: widget.isGuest),
     ];
 
@@ -42,6 +42,11 @@ class _HomeShellState extends State<HomeShell> {
             label: 'Home',
           ),
           NavigationDestination(
+            icon: Icon(Icons.insights_outlined),
+            selectedIcon: Icon(Icons.insights),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.radar_outlined),
             selectedIcon: Icon(Icons.radar),
             label: 'Analyze',
@@ -57,71 +62,164 @@ class _HomeShellState extends State<HomeShell> {
   }
 }
 
-// ---------------------------------------------------------------
-// Tabs (placeholders, we will replace them one by one)
-// ---------------------------------------------------------------
-
 class _HomeTab extends StatelessWidget {
-  const _HomeTab();
+  final VoidCallback onAnalyze;
+  const _HomeTab({required this.onAnalyze});
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Text('Welcome back', style: text.headlineLarge),
-        const SizedBox(height: AppSpacing.sm),
-        Text('Your skill gaps will show up here.', style: text.bodyMedium),
-        const SizedBox(height: AppSpacing.lg),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return ValueListenableBuilder<List<String>>(
+      valueListenable: mySkills,
+      builder: (_, skills, _) {
+        final skillCount = skills.length;
+        final ready = skillCount >= 2;
+
+        return ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            Text('Welcome back', style: text.headlineLarge),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              ready
+                  ? 'Your profile is ready for the next analysis.'
+                  : 'Add a few skills to start your profile.',
+              style: text.bodyMedium,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // summary card
+            _StatCard(
+              title: 'Skills',
+              value: '$skillCount',
+              color: AppColors.radarDeep,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // skill list
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Latest match', style: text.titleMedium),
-                const SizedBox(height: AppSpacing.sm),
-                Text('No analysis yet. Start from the Analyze tab.',
-                    style: text.bodyMedium),
+                Text('My skills', style: text.titleMedium),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MySkillsPage()),
+                    );
+                  },
+                  child: const Text('Manage'),
+                ),
               ],
             ),
-          ),
-        ),
-      ],
+            const SizedBox(height: AppSpacing.sm),
+
+            if (skills.isEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Text(
+                    'No skills yet. Add your skills to improve your score.',
+                    style: text.bodyMedium,
+                  ),
+                ),
+              )
+            else
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final skill in skills)
+                    Chip(
+                      label: Text(skill),
+                      avatar: const Icon(Icons.check, size: 16),
+                    ),
+                ],
+              ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // quick actions
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Quick actions', style: text.titleMedium),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const MySkillsPage(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.psychology_outlined),
+                            label: const Text('Add skills'),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: onAnalyze,
+                            icon: const Icon(Icons.radar_outlined),
+                            label: const Text('Analyze'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-class _PlaceholderTab extends StatelessWidget {
-  final IconData icon;
+class _StatCard extends StatelessWidget {
   final String title;
-  final String subtitle;
+  final String value;
+  final Color color;
 
-  const _PlaceholderTab({
-    required this.icon,
+  const _StatCard({
     required this.title,
-    required this.subtitle,
+    required this.value,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 64, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: AppSpacing.md),
-            Text(title, style: text.headlineMedium, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.sm),
-            Text(subtitle, style: text.bodyMedium, textAlign: TextAlign.center),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: text.bodySmall),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            value,
+            style: text.headlineMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -154,8 +252,22 @@ class _ProfileTab extends StatelessWidget {
             leading: Icon(
               isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
             ),
-            title: Text(isDark ? 'Switch to light mode' : 'Switch to dark mode'),
+            title: Text(
+              isDark ? 'Switch to light mode' : 'Switch to dark mode',
+            ),
             onTap: toggleThemeMode,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.psychology_outlined),
+            title: const Text('My skills'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MySkillsPage()),
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
