@@ -1,7 +1,6 @@
 // lib/pages/skills/my_skills_page.dart
 import 'package:flutter/material.dart';
 
-import '../../data/offers_store.dart';
 import '../../theme/app_theme.dart';
 import '../../data/skills_store.dart';
 
@@ -100,16 +99,8 @@ class _MySkillsPageState extends State<MySkillsPage> {
                     style: text.bodyMedium,
                   )
                 else
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      for (final s in skills)
-                        InputChip(
-                          label: Text(s),
-                          onDeleted: () => removeSkill(s),
-                        ),
-                    ],
+                  Column(
+                    children: [for (final s in skills) _SkillTile(name: s)],
                   ),
                 const SizedBox(height: AppSpacing.lg),
 
@@ -133,6 +124,63 @@ class _MySkillsPageState extends State<MySkillsPage> {
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _SkillTile extends StatelessWidget {
+  const _SkillTile({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.xs,
+            AppSpacing.md,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: Text(name, style: text.titleMedium)),
+                  IconButton(
+                    tooltip: 'Remove',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => removeSkill(name),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.md),
+                child: SegmentedButton<int>(
+                  showSelectedIcon: false,
+                  style: SegmentedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                  segments: const [
+                    ButtonSegment(value: 1, label: Text('Beginner')),
+                    ButtonSegment(value: 2, label: Text('Intermediate')),
+                    ButtonSegment(value: 3, label: Text('Advanced')),
+                  ],
+                  selected: {levelOf(name)},
+                  onSelectionChanged: (s) => setSkillLevel(name, s.first),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

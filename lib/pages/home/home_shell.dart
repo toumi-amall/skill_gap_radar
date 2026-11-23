@@ -5,8 +5,11 @@ import '../../theme/app_theme.dart';
 import '../../theme/theme_controller.dart';
 import '../analyze/analyze_page.dart';
 import '../skills/my_skills_page.dart';
+import '../stats/stats_page.dart';
 import '../welcome/welcome_page.dart';
 import 'dashboard_page.dart';
+import '../../data/auth_store.dart';
+import '../../data/session.dart';
 
 class HomeShell extends StatefulWidget {
   final bool isGuest;
@@ -25,6 +28,7 @@ class _HomeShellState extends State<HomeShell> {
       _HomeTab(onAnalyze: () => setState(() => _index = 2)),
       const DashboardPage(),
       const AnalyzePage(),
+      const StatsPage(),
       _ProfileTab(isGuest: widget.isGuest),
     ];
 
@@ -50,6 +54,11 @@ class _HomeShellState extends State<HomeShell> {
             icon: Icon(Icons.radar_outlined),
             selectedIcon: Icon(Icons.radar),
             label: 'Analyze',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart),
+            label: 'Stats',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
@@ -243,7 +252,7 @@ class _ProfileTab extends StatelessWidget {
         Text(
           isGuest
               ? 'You are using the app as a guest. Your data stays on this device.'
-              : 'You are logged in.',
+              : 'Logged in as $userName.',
           style: text.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -272,7 +281,10 @@ class _ProfileTab extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         OutlinedButton(
-          onPressed: () {
+          onPressed: () async {
+            await logout();
+            clearAllData();
+            if (!context.mounted) return;
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const WelcomePage()),

@@ -1,6 +1,8 @@
 // lib/pages/auth/login_page.dart
 import 'package:flutter/material.dart';
 
+import '../../data/auth_store.dart';
+import '../../data/session.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/theme_controller.dart';
 import '../../widgets/radar_logo.dart';
@@ -33,11 +35,18 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
-    // TODO: call POST /api/auth/login (Node.js) here.
-    await Future.delayed(const Duration(seconds: 1));
+    final error = await login(_emailCtrl.text, _passCtrl.text);
+    if (error == null) await loadAllData();
 
     if (!mounted) return;
     setState(() => _loading = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const HomeShell()),

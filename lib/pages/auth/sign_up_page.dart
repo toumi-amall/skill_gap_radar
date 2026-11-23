@@ -1,6 +1,8 @@
 // lib/pages/auth/sign_up_page.dart
 import 'package:flutter/material.dart';
 
+import '../../data/auth_store.dart';
+import '../../data/session.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/theme_controller.dart';
 import '../../widgets/radar_logo.dart';
@@ -66,11 +68,22 @@ class _SignUpPageState extends State<SignUpPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
-    // TODO: call POST /api/auth/register (Node.js) here.
-    await Future.delayed(const Duration(seconds: 1));
+    final error = await register(
+      _nameCtrl.text,
+      _emailCtrl.text,
+      _passCtrl.text,
+    );
+    if (error == null) await loadAllData();
 
     if (!mounted) return;
     setState(() => _loading = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const HomeShell()),
@@ -190,7 +203,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         child: TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0, end: _strength),
                           duration: const Duration(milliseconds: 250),
-                          builder: (_, value, __) => LinearProgressIndicator(
+                          builder: (_, value, _) => LinearProgressIndicator(
                             value: value,
                             minHeight: 5,
                             color: _strengthColor,

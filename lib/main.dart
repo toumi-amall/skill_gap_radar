@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'data/offers_store.dart';
-import 'data/skills_store.dart';
+import 'data/auth_store.dart';
+import 'data/session.dart';
+import 'data/stats_store.dart';
+import 'pages/home/home_shell.dart';
 import 'pages/welcome/welcome_page.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await loadSkills();
-  await loadOffers();
+  try {
+    await loadSession();
+    if (isLoggedIn) await loadAllData();
+  } catch (e) {
+    debugPrint('Startup error: $e');
+  }
+  startTracking();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const SkillGapRadarApp());
 }
@@ -35,7 +42,7 @@ class SkillGapRadarApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: mode,
-          home: const WelcomePage(),
+          home: isLoggedIn ? const HomeShell() : const WelcomePage(),
         );
       },
     );
